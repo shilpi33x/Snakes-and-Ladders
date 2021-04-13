@@ -23,6 +23,8 @@ public class Token : MonoBehaviour
     [SerializeField] GameObject button;
     [SerializeField] GameObject canvas;
 
+    [SerializeField] Token otherToken;
+
     //cached reference
     Dice dice;
 
@@ -76,9 +78,17 @@ public class Token : MonoBehaviour
             Move(diceRoll);
         else if (diceRoll == 1)
         {
-            hasStarted = true;
-            Move(diceRoll);
+            StartToken(diceRoll);
         }
+    }
+
+    private void StartToken(int diceRoll)
+    {
+        Color opacity = gameObject.GetComponent<SpriteRenderer>().color;
+        opacity.a = 255f;
+        gameObject.GetComponent<SpriteRenderer>().color = opacity;
+        hasStarted = true;
+        Move(diceRoll);
     }
 
     //Game Rule: Movement possible only if Token doesn't exceed 100 - has to fall exactly on 100 to win
@@ -217,6 +227,7 @@ public class Token : MonoBehaviour
     private void OnGameOver()
     {
         Destroy(gameObject);
+        Destroy(otherToken.gameObject);
     }
 
     //Instantiate button to reload scene - play again
