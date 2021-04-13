@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class Token : MonoBehaviour
 {
@@ -20,17 +19,20 @@ public class Token : MonoBehaviour
     [SerializeField] AudioClip enemyMoveSound;
     [SerializeField] GameObject particleVFX;
 
+    [Header("Game Objects")]
     [SerializeField] GameObject button;
     [SerializeField] GameObject canvas;
 
-    //cached values
+    //cached reference
     Dice dice;
 
     private void Start()
     {
+        //Cache refence to Dice script
         dice = FindObjectOfType<Dice>();
     }
 
+    //Check if script is attached to Player or Enemy game object
     private bool CheckPlayerOrEnemy()
     {
         if (tag == "Player")
@@ -39,6 +41,7 @@ public class Token : MonoBehaviour
             return false;
     }
 
+    //Begin Player movement
     public void OnClickingButton()
     {
         if (CheckPlayerOrEnemy())
@@ -47,14 +50,17 @@ public class Token : MonoBehaviour
             StartCoroutine(DelayEnemyMove());
     }
 
+    //Begin Enemy movement after delay of waitTime - ensures that Player and Enemy do not move at same time
     private IEnumerator DelayEnemyMove()
     {
         yield return new WaitForSeconds(waitTime);
         CheckHasStarted();
     }
 
+    //Funtion to implement Game Rule: Token(either Player or Enemy) will remain inactive until the first time a one is rolled
     private void CheckHasStarted()
     {
+        //fetch dice roll from Dice script
         int diceRoll;
         if(CheckPlayerOrEnemy())
         {
@@ -65,6 +71,7 @@ public class Token : MonoBehaviour
             diceRoll = dice.GetEnemyDiceRoll();
         }
 
+        //Check if game has started for Token i.e. if Token is active; move only if active
         if (hasStarted)
             Move(diceRoll);
         else if (diceRoll == 1)
@@ -72,22 +79,25 @@ public class Token : MonoBehaviour
             hasStarted = true;
             Move(diceRoll);
         }
-//        else
-//            IncreaseStartProbabilty();
     }
 
+    //Game Rule: Movement possible only if Token doesn't exceed 100 - has to fall exactly on 100 to win
+    //Check if Token can move, and to which position(destination square's no.); implement Game Rule
     private void Move(int diceRoll)
     {
         if ((pos + diceRoll) <= 100)
         {
             pos += diceRoll;
+
             if (pos < 100)
             {
+                //Token has not reached 100 - normal movement
                 pos = CheckSnakeOrLadder(pos);
                 MoveToPos(pos);
             }
             else
             {
+                //Token reaches position 100
                 if (CheckPlayerOrEnemy())
                     OnWin();
                 else
@@ -96,6 +106,8 @@ public class Token : MonoBehaviour
         }
     }
 
+    //Calculate and move Token to position of destination square w.r.t main camera
+    //DISCLAIMER: This approach only works with square cameras. Board has to be same size as Main Camera; used second camera for UI
     private void MoveToPos(int pos)
     {
         Camera gameCamera = Camera.main;
@@ -117,6 +129,7 @@ public class Token : MonoBehaviour
             return (((10 - (pos - 1) % 10) * 2 * unit) - unit);     //right to left
     }
 
+    //Check if Token will land on a Snake or a Ladder; update destination position to target position of Snake or Ladder
     private int CheckSnakeOrLadder(int pos)
     {
         if (pos == 2)               //for ladders
@@ -154,6 +167,7 @@ public class Token : MonoBehaviour
         return pos;
     }
 
+    //Play audio every time the Token moves
     private void PlayMoveSound()
     {
         if (CheckPlayerOrEnemy())
@@ -162,25 +176,23 @@ public class Token : MonoBehaviour
             AudioSource.PlayClipAtPoint(enemyMoveSound, Camera.main.transform.position);
     }
 
+    //Play FX when Player reaches 100 first
     private void OnWin()
     {
         TriggerParticlesVFX();
+        TriggerWinSFX();
         if (CheckPlayerOrEnemy())
             InstantiatePlayAgainButton();
         OnGameOver();
     }
 
+    //Play FX when Enemy reaches 100 first
     private void OnLose()
     {
+        TriggerLoseSFX();
         if (!CheckPlayerOrEnemy())
             InstantiatePlayAgainButton();
         OnGameOver();
-    }
-
-    private void OnGameOver()
-    {
-        TriggerGameOverSFX();
-        Destroy(gameObject);
     }
 
     private void TriggerParticlesVFX()
@@ -191,21 +203,31 @@ public class Token : MonoBehaviour
         Destroy(particle, 20f);
     }
 
-    private void TriggerGameOverSFX()
+    private void TriggerWinSFX()
     {
-        if(CheckPlayerOrEnemy())
-            AudioSource.PlayClipAtPoint(winSound, Camera.main.transform.position);
-        else
-            AudioSource.PlayClipAtPoint(loseSound, Camera.main.transform.position);
+        AudioSource.PlayClipAtPoint(winSound, Camera.main.transform.position);
     }
 
+    private void TriggerLoseSFX()
+    {
+        AudioSource.PlayClipAtPoint(loseSound, Camera.main.transform.position);
+    }
+
+    //Play irrespective of which Token wins
+    private void OnGameOver()
+    {
+        Destroy(gameObject);
+    }
+
+    //Instantiate button to reload scene - play again
     private void InstantiatePlayAgainButton()
     {
         GameObject playAgainCanvas = Instantiate(canvas);
         GameObject playAgainButton = Instantiate(button);
         playAgainButton.transform.SetParent(playAgainCanvas.transform, false);
     }
-
+    
+    //Access waitTime variable from other scripts
     public float GetWaitTime()
     {
         return waitTime;

@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class SceneLoader : MonoBehaviour
 {
 
+    //Function to reload game scene
     public void PlayAgain()
     {
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
