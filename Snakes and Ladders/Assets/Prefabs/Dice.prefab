@@ -43,7 +43,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0a8b5eb0a7788448b5ca0d6eca978cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerDiceRoll: 0
+  diceRoll: 0
   enemyDiceRoll: 0
-  playerDiceText: {fileID: 0}
-  enemyDiceText: {fileID: 0}
