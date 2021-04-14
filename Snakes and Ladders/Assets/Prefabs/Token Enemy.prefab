@@ -97,7 +97,8 @@ MonoBehaviour:
   unit: 0.05
   waitTime: 0.5
   pos: 0
-  hasStarted: 0
+  isActive: 0
+  tokenDiceText: {fileID: 0}
   winSound: {fileID: 8300000, guid: d202134cc0bd59f44b9158e14eaa545f, type: 3}
   loseSound: {fileID: 8300000, guid: 3f814ac4b5244bf40b2ada5fcf441982, type: 3}
   playerMoveSound: {fileID: 8300000, guid: f7bb88b634317ca48b1b1a89d24204c4, type: 3}

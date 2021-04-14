@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Token : MonoBehaviour
 {
@@ -10,9 +11,11 @@ public class Token : MonoBehaviour
     [SerializeField] float waitTime = 0.5f;
 
     [SerializeField] int pos = 0;
-    [SerializeField] bool hasStarted = false;
+    [SerializeField] bool isActive = false;
 
     [Header("Multimedia")]
+    [SerializeField] TextMeshProUGUI tokenDiceText;
+
     [SerializeField] AudioClip winSound;
     [SerializeField] AudioClip loseSound;
     [SerializeField] AudioClip playerMoveSound;
@@ -34,7 +37,7 @@ public class Token : MonoBehaviour
         dice = FindObjectOfType<Dice>();
     }
 
-    //Check if script is attached to Player or Enemy game object
+    //Check if script is attached to Player or Enemy token
     private bool CheckPlayerOrEnemy()
     {
         if (tag == "Player")
@@ -43,57 +46,60 @@ public class Token : MonoBehaviour
             return false;
     }
 
-    //Begin Player movement
-    public void OnClickingButton()
+    //Begin Token movement
+    public void OnDiceRoll()
     {
         if (CheckPlayerOrEnemy())
-            CheckHasStarted();
+            CheckIfActive();
         else
             StartCoroutine(DelayEnemyMove());
     }
 
-    //Begin Enemy movement after delay of waitTime - ensures that Player and Enemy do not move at same time
+    //Begin Enemy token movement after delay of waitTime - ensures that Player and Enemy do not move at same time
     private IEnumerator DelayEnemyMove()
     {
         yield return new WaitForSeconds(waitTime);
-        CheckHasStarted();
+        CheckIfActive();
     }
 
     //Funtion to implement Game Rule: Token(either Player or Enemy) will remain inactive until the first time a one is rolled
-    private void CheckHasStarted()
+    private void CheckIfActive()
     {
-        //fetch dice roll from Dice script
+        //Fetch and display dice roll from Dice script
         int diceRoll;
-        if(CheckPlayerOrEnemy())
-        {
-            diceRoll = dice.GetPlayerDiceRoll();
-        }
-        else
-        {
-            diceRoll = dice.GetEnemyDiceRoll();
-        }
+        diceRoll = dice.RollDice(CheckPlayerOrEnemy());
+        tokenDiceText.text = diceRoll.ToString();
 
         //Check if game has started for Token i.e. if Token is active; move only if active
-        if (hasStarted)
-            Move(diceRoll);
+        if (isActive)
+            CheckMovement(diceRoll);
         else if (diceRoll == 1)
         {
             StartToken(diceRoll);
         }
     }
 
+    //Set Token as active
     private void StartToken(int diceRoll)
     {
+        isActive = true;
+
+        //Increase opacity of Token to 100% when active
         Color opacity = gameObject.GetComponent<SpriteRenderer>().color;
         opacity.a = 255f;
         gameObject.GetComponent<SpriteRenderer>().color = opacity;
-        hasStarted = true;
-        Move(diceRoll);
+
+        if (CheckPlayerOrEnemy())
+            dice.ResetProbabilityOfOneForPlayer();
+        else
+            dice.ResetProbabilityOfOneForEnemy();
+
+        CheckMovement(diceRoll);
     }
 
     //Game Rule: Movement possible only if Token doesn't exceed 100 - has to fall exactly on 100 to win
     //Check if Token can move, and to which position(destination square's no.); implement Game Rule
-    private void Move(int diceRoll)
+    private void CheckMovement(int diceRoll)
     {
         if ((pos + diceRoll) <= 100)
         {
@@ -236,11 +242,5 @@ public class Token : MonoBehaviour
         GameObject playAgainCanvas = Instantiate(canvas);
         GameObject playAgainButton = Instantiate(button);
         playAgainButton.transform.SetParent(playAgainCanvas.transform, false);
-    }
-    
-    //Access waitTime variable from other scripts
-    public float GetWaitTime()
-    {
-        return waitTime;
     }
 }
